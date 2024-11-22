@@ -10,15 +10,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
 
   let isDrawing = false;
+  let isLocked = false; // Lock state
+
   let points = [];
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
+  let centerX, centerY; // Center coordinates of the canvas
+
+  // Adjust canvas size and dynamically calculate center
+  function resizeCanvas() {
+      const ratio = 4 / 3; // Maintain aspect ratio (800x600)
+      const width = Math.min(window.innerWidth * 0.9, 800);
+      const height = width / ratio;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      centerX = canvas.width / 2;
+      centerY = canvas.height / 2;
+
+      clearCanvas();
+      drawCenterPoint();
+  }
 
   function switchScreen(showScreen) {
       [welcomeScreen, gameScreen, resultScreen].forEach((screen) => {
-          screen.style.display = "none";
+          screen.classList.remove("active");
       });
-      showScreen.style.display = "flex";
+      showScreen.classList.add("active");
   }
 
   function clearCanvas() {
@@ -37,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function calculateScore() {
       if (points.length === 0) return 0;
+
       const distances = points.map(
           ([x, y]) => Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
       );
@@ -44,31 +62,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const deviations = distances.map((d) => Math.abs(d - avgDistance));
       const avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
 
-      // Score inversely proportional to deviation (scaled for better visualization)
       return Math.max(0, Math.round(100 - avgDeviation));
-  }
-
-  function updateLiveScore() {
-      const score = calculateScore();
-      liveScoreDisplay.textContent = score;
   }
 
   function drawPerfectCircle() {
       if (points.length === 0) return;
+
+      // Calculate the average radius
       const distances = points.map(
           ([x, y]) => Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
       );
       const avgRadius = distances.reduce((a, b) => a + b, 0) / distances.length;
 
+      // Draw the perfect circle
       ctx.beginPath();
       ctx.arc(centerX, centerY, avgRadius, 0, 2 * Math.PI);
-      ctx.strokeStyle = "blue";
+      ctx.strokeStyle = "#87DF2C";
       ctx.lineWidth = 2;
       ctx.stroke();
-
-      ctx.font = "16px Arial";
-      ctx.fillStyle = "blue";
-      ctx.fillText("Perfect Circle", centerX - avgRadius - 10, centerY - avgRadius - 10);
   }
 
   canvas.addEventListener("mousedown", startDrawing);
@@ -84,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isDrawing = true;
       points = [];
       ctx.beginPath();
+
       const { x, y } = getCanvasCoordinates(e);
       ctx.moveTo(x, y);
       points.push([x, y]);
@@ -91,24 +103,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function draw(e) {
       if (!isDrawing) return;
+
       const { x, y } = getCanvasCoordinates(e);
       ctx.lineTo(x, y);
       ctx.stroke();
       points.push([x, y]);
-      updateLiveScore();
+
+      liveScoreDisplay.textContent = calculateScore();
   }
 
   function stopDrawing() {
       if (!isDrawing) return;
-      isDrawing = false;
 
-      // Automatically show perfect circle and score
-      const score = calculateScore();
+      isDrawing = false;
       drawPerfectCircle();
-      setTimeout(() => {
-          finalScoreDisplay.textContent = score;
-          switchScreen(resultScreen);
-      }, 2000); // Show for 2 seconds before switching to result screen
+
+      finalScoreDisplay.textContent = calculateScore();
+      setTimeout(() => switchScreen(resultScreen), 2000);
   }
 
   function getCanvasCoordinates(e) {
@@ -120,6 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   startButton.addEventListener("click", () => {
+      resizeCanvas();
       switchScreen(gameScreen);
       clearCanvas();
       drawCenterPoint();
@@ -130,5 +142,11 @@ document.addEventListener("DOMContentLoaded", () => {
       clearCanvas();
   });
 
+  resizeCanvas(); // Initial canvas resize
   switchScreen(welcomeScreen);
+
+  // Prevent scrolling during touch events on canvas
+  canvas.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+  canvas.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  canvas.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
 });

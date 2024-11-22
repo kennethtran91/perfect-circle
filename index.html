@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfect Circle Game</title>
-    <link rel="stylesheet" href="style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Circle Game</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+25&family=Jersey+20&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="welcome-screen" class="center">
-        <h1>Perfect Circle Game</h1>
-        <button id="start-button" class="btn">Start Game</button>
-    </div>
+  <div id="welcome-screen" class="screen">
+    <h1 class="title">PERFECT ZERO</h1>
+    <button id="start-button" class="btn">Start Game</button>
+  </div>
 
-    <div id="game-screen" class="center">
-        <canvas id="drawing-canvas" width="800" height="600"></canvas>
-        <p><span id="live-score">0 %</span></p>
+  <div id="game-screen" class="screen">
+    <canvas id="drawing-canvas"></canvas>
+    <div class="live-score-container">
+      <span id="live-score">0</span> %
     </div>
+  </div>
 
-    <div id="result-screen" class="center">
-        <h2>Your Score: <span id="final-score">0</span></h2>
-        <button id="reset-button" class="btn">Play Again</button>
-    </div>
+  <div id="result-screen" class="screen">
+    <h1 class="title">Your Score: <span id="final-score"></span></h1>
+    <button id="reset-button" class="btn">Play Again</button>
+  </div>
 
-    <script src="game.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>

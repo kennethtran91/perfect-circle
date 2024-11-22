@@ -1,41 +1,101 @@
-body {
+/* General Reset */
+* {
     margin: 0;
-    font-family: Arial, sans-serif;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Body Styling */
+  body {
+    font-family: "Jersey 25", sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f4f4f4;
-}
-
-#welcome-screen, #game-screen, #result-screen {
+    background: #060D10;
+    overflow: hidden;
+  }
+  
+  /* Screen Container Styling */
+  .screen {
     display: none;
-    text-align: center;
-}
-
-canvas {
-    background: #ffffff;
-    border: 2px solid #000;
-}
-
-.center {
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 100%;
     height: 100%;
-}
-
-.btn {
+  }
+  
+  .screen.active {
+    display: flex;
+  }
+  
+  /* Title Styling */
+  .title {
+    font-size: 15rem;
+    font-family: "Jersey 25", sans-serif;
+    margin-bottom: 20px;
+    color: #E9C46A;
+    text-align: center;
+  }
+  
+  /* Button Styling */
+  .btn {
+    font-family: "Jersey 20", sans-serif;
     padding: 10px 20px;
-    margin: 10px;
-    background-color: #007bff;
+    font-size: 1.2rem;
     color: white;
+    background-color: #EE6C4D;
     border: none;
-    cursor: pointer;
     border-radius: 5px;
-}
-
-.btn:hover {
+    cursor: pointer;
+  }
+  
+  .btn:hover {
     background-color: #0056b3;
-}
+  }
+  
+  /* Canvas Styling */
+  canvas {
+    border: 2px solid #333;
+    background: white;
+    touch-action: none; /* Prevent gestures and scrolling on canvas */
+  }
+  
+  /* Live Score Styling */
+  .live-score-container {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #FFF;
+  }
+  
+  /* Responsive Styling */
+  @media (min-width: 768px) {
+    .title {
+      font-size: 22rem;
+    }
+    .btn {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    canvas {
+      width: 90%;
+      height: auto;
+    }
+  
+    .title {
+      font-size: 5rem;
+    }
+  
+    .btn {
+      font-size: 1.2rem;
+      padding: 8px 16px;
+    }
+  
+    .live-score-container {
+      font-size: 1rem;
+    }
+  }
+  
