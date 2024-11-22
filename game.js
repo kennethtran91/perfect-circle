@@ -1,100 +1,134 @@
-const canvas = document.getElementById("circleCanvas");
-const ctx = canvas.getContext("2d");
-const restartButton = document.getElementById("restartButton");
-const scoreDisplay = document.getElementById("scoreDisplay");
+document.addEventListener("DOMContentLoaded", () => {
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const gameScreen = document.getElementById("game-screen");
+  const resultScreen = document.getElementById("result-screen");
+  const startButton = document.getElementById("start-button");
+  const resetButton = document.getElementById("reset-button");
+  const canvas = document.getElementById("drawing-canvas");
+  const liveScoreDisplay = document.getElementById("live-score");
+  const finalScoreDisplay = document.getElementById("final-score");
+  const ctx = canvas.getContext("2d");
 
-let isDrawing = false;
-let path = [];
+  let isDrawing = false;
+  let points = [];
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
 
-// Handle touch events
-canvas.addEventListener("touchstart", (event) => {
-  isDrawing = true;
-  path = [];
-  const touch = event.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = touch.clientX - rect.left;
-  const y = touch.clientY - rect.top;
-  path.push({ x, y });
-  updateScoreDisplay(0); // Reset score display
-});
-
-canvas.addEventListener("touchmove", (event) => {
-  if (!isDrawing) return;
-  const touch = event.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = touch.clientX - rect.left;
-  const y = touch.clientY - rect.top;
-  path.push({ x, y });
-  drawPath(path);
-});
-
-canvas.addEventListener("touchend", () => {
-  isDrawing = false;
-  analyzePath(path);
-});
-
-// Draw the path on the canvas
-function drawPath(path) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  path.forEach((point, index) => {
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
-  });
-  ctx.strokeStyle = "#0077ff";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
-// Analyze the path and calculate the score
-function analyzePath(path) {
-  if (path.length < 10) {
-    alert("Draw a complete circle to get a score!");
-    return;
+  function switchScreen(showScreen) {
+      [welcomeScreen, gameScreen, resultScreen].forEach((screen) => {
+          screen.style.display = "none";
+      });
+      showScreen.style.display = "flex";
   }
 
-  const center = calculateCentroid(path);
-  const distances = path.map((p) => distance(p, center));
-  const avgRadius = distances.reduce((a, b) => a + b, 0) / distances.length;
+  function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      points = [];
+      liveScoreDisplay.textContent = "0";
+  }
 
-  const perfectCircleError =
-    distances.reduce((error, d) => error + Math.abs(d - avgRadius), 0) /
-    distances.length;
+  function drawCenterPoint() {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = "red";
+      ctx.fill();
+  }
 
-  // Score is inversely proportional to the error
-  const score = Math.max(0, 100 - perfectCircleError * 20);
+  function calculateScore() {
+      if (points.length === 0) return 0;
+      const distances = points.map(
+          ([x, y]) => Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+      );
+      const avgDistance = distances.reduce((a, b) => a + b, 0) / distances.length;
+      const deviations = distances.map((d) => Math.abs(d - avgDistance));
+      const avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
 
-  // Draw the ideal circle
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, avgRadius, 0, 2 * Math.PI);
-  ctx.strokeStyle = "#00ff00";
-  ctx.lineWidth = 1;
-  ctx.stroke();
+      // Score inversely proportional to deviation (scaled for better visualization)
+      return Math.max(0, Math.round(100 - avgDeviation));
+  }
 
-  // Update the score display
-  scoreDisplay.textContent = `Score: ${Math.round(score)}%`;
-}
+  function updateLiveScore() {
+      const score = calculateScore();
+      liveScoreDisplay.textContent = score;
+  }
 
-// Calculate the centroid (center point) of the path
-function calculateCentroid(path) {
-  const x = path.reduce((sum, p) => sum + p.x, 0) / path.length;
-  const y = path.reduce((sum, p) => sum + p.y, 0) / path.length;
-  return { x, y };
-}
+  function drawPerfectCircle() {
+      if (points.length === 0) return;
+      const distances = points.map(
+          ([x, y]) => Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+      );
+      const avgRadius = distances.reduce((a, b) => a + b, 0) / distances.length;
 
-// Calculate the distance between two points
-function distance(p1, p2) {
-  return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
-}
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, avgRadius, 0, 2 * Math.PI);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-// Update the score display
-function updateScoreDisplay(score) {
-  scoreDisplay.textContent = `Score: ${Math.round(score)}%`;
-}
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "blue";
+      ctx.fillText("Perfect Circle", centerX - avgRadius - 10, centerY - avgRadius - 10);
+  }
 
-// Restart the game
-restartButton.addEventListener("click", () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  path = [];
-  updateScoreDisplay(0);
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mouseleave", stopDrawing);
+
+  canvas.addEventListener("touchstart", (e) => startDrawing(e.touches[0]));
+  canvas.addEventListener("touchmove", (e) => draw(e.touches[0]));
+  canvas.addEventListener("touchend", stopDrawing);
+
+  function startDrawing(e) {
+      isDrawing = true;
+      points = [];
+      ctx.beginPath();
+      const { x, y } = getCanvasCoordinates(e);
+      ctx.moveTo(x, y);
+      points.push([x, y]);
+  }
+
+  function draw(e) {
+      if (!isDrawing) return;
+      const { x, y } = getCanvasCoordinates(e);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      points.push([x, y]);
+      updateLiveScore();
+  }
+
+  function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+
+      // Automatically show perfect circle and score
+      const score = calculateScore();
+      drawPerfectCircle();
+      setTimeout(() => {
+          finalScoreDisplay.textContent = score;
+          switchScreen(resultScreen);
+      }, 2000); // Show for 2 seconds before switching to result screen
+  }
+
+  function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+      };
+  }
+
+  startButton.addEventListener("click", () => {
+      switchScreen(gameScreen);
+      clearCanvas();
+      drawCenterPoint();
+  });
+
+  resetButton.addEventListener("click", () => {
+      switchScreen(welcomeScreen);
+      clearCanvas();
+  });
+
+  switchScreen(welcomeScreen);
 });
